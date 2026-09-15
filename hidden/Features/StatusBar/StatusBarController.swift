@@ -100,17 +100,40 @@ class StatusBarController {
     // separator gets company: zero-length items to its right that inflate with
     // it. macOS overflows from the left, so the icons go first and the spacers
     // stay; surplus spacers overflow themselves, which is harmless. The count
-    // is fixed so every launch registers the same names: a name first seen on a
-    // later launch would land leftmost, outside the block. Seven units cover a
-    // 5800pt display next to an 1800pt one.
+    // is derived from the WIDEST attached screen at launch (see spacerCount),
+    // not a constant: a fixed count tuned for one multi-monitor setup (e.g. 6,
+    // sized for a 5800pt display next to an 1800pt one) massively over-inflates
+    // on a single more modest display -- on a lone 3840pt screen that requests
+    // ~7 * 1856pt =~ 13,000pt against a 3840pt-wide bar, which pushes the real
+    // icons (and sometimes the separator glyph itself) into a broken layout
+    // instead of a clean collapse. The count is fixed for the lifetime of one
+    // launch so every item registers under the same name in the same run; a
+    // screen reconfiguration is picked up on the next launch, same as any other
+    // macOS-27 item-set change (one-time re-drag, documented above).
     private static func makeSpacers() -> [NSStatusItem] {
         guard #available(macOS 27.0, *) else { return [] }
-        return (0..<6).map { index in
+        return (0..<spacerCount).map { index in
             let item = makeItem("hiddenbar_spacer\(index)", length: 0)
             item.button?.isEnabled = false
             item.isVisible = false
             return item
         }
+    }
+
+    // Total inflated span (separator + spacers) needs to reach the WIDEST
+    // attached screen's width so real icons overflow there too, but each item
+    // is individually capped at collapseUnit (sized from the NARROWEST screen,
+    // see above). spacerCount is how many collapseUnit-sized units on top of
+    // the separator itself are needed to cover that width, rounded up.
+    // Single-screen example (this machine, 3840pt): collapseUnit = 1856,
+    // ceil(3840/1856) = 3 units total, so 2 spacers -- not 6. Reduces to the
+    // PR's own "6" for its tested 5800pt-vs-1800pt case: collapseUnit = 836,
+    // ceil(5800/836) = 7 units, 6 spacers.
+    @available(macOS 27.0, *)
+    private static var spacerCount: Int {
+        let widest = NSScreen.screens.map { $0.frame.width }.max() ?? collapseUnit
+        let unitsNeeded = Int((widest / collapseUnit).rounded(.up))
+        return max(0, min(12, unitsNeeded - 1))
     }
 
     // Spacers are visible only while collapsed. isVisible keeps the item's slot

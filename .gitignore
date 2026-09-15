@@ -137,3 +137,8 @@ DerivedData/
 /docs/specs/
 /docs/implementation-notes/
 /.planning/
+
+# Local build/dist artifacts and App Store backup (not part of source, not for the repo)
+/build/
+/dist/
+/backup-appstore-*.app/

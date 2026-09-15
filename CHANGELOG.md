@@ -11,6 +11,7 @@ Requires macOS 13 Ventura or later. (Pre-Ventura users: stay on
 
 ### Fixed
 - macOS 27 Golden Gate: hiding works again with the new single-window menu bar and native overflow button (#360). The separator stays under half the display width (macOS 27 drops items at that cliff) and spacer items cover wide and mixed-width displays; displaced icons go into the system `«` overflow instead of off-screen.
+- macOS 27: the spacer count is now derived from the widest attached screen instead of a fixed 6, which was sized for a specific two-monitor setup and drastically over-inflated (and broke layout) on a single, more modest display.
 - Multi-display: the collapse width is now sized for the widest attached screen, so icons no longer leak on wider external monitors; the width re-applies on display hot-plug.
 - Auto-collapse no longer fires while you are interacting with the menu bar (the timer defers and re-arms while the pointer is in the bar).
 - The Preferences window no longer closes when auto-collapse fires with "use full menu bar on expanding" enabled (#170, #66, #151).
